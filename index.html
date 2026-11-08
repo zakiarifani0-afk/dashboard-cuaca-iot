@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Cuaca IoT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body {
+      background: linear-gradient(135deg, #1f2833, #0b0c10);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 40px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
+    .dashboard-grid {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Scene untuk efek 3D Flip */
+    .card-scene {
+      width: 300px;
+      height: 350px;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: transform 0.8s;
+      transform-style: preserve-3d;
+    }
+
+    /* Class yang ditambah saat dipencet */
+    .card-scene.is-flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 20px;
+      padding: 30px 20px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      background: rgba(0, 243, 255, 0.1);
+      border-color: rgba(0, 243, 255, 0.3);
+      justify-content: flex-start;
+      padding: 40px 25px;
+    }
+
+    .icon-wrapper { font-size: 3.5rem; color: #00f3ff; margin-bottom: 15px; }
+    h2 { font-size: 1.2rem; color: #b0c4de; margin-bottom: 15px; letter-spacing: 1px; }
+    .nilai { font-size: 4.5rem; font-weight: 700; line-height: 1; margin-bottom: 15px; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
+    .satuan {
+      font-size: 0.9rem;
+      background: rgba(0,0,0,0.3);
+      padding: 8px 20px;
+      border-radius: 20px;
+      color: #88a2b5;
+    }
+
+    /* Styling Teks Penjelasan di Belakang Kartu */
+    .card-back h3 { color: #00f3ff; margin-bottom: 20px; font-size: 1.3rem;}
+    .card-back p { font-size: 0.95rem; line-height: 1.6; color: #d1e8ff; text-align: left;}
+
+  </style>
+</head>
+<body>
+
+  <h1>Sistem Pemantau Cuaca IoT</h1>
+  
+  <div class="dashboard-grid">
+    <!-- Kartu Suhu -->
+    <div class="card-scene" onclick="this.classList.toggle('is-flipped')">
+      <div class="card-inner">
+        <!-- Bagian Depan -->
+        <div class="card-front">
+          <div class="icon-wrapper"><i class="fa-solid fa-temperature-half"></i></div>
+          <h2>SUHU RUANGAN</h2>
+          <div class="nilai" id="val-suhu">0</div>
+          <div class="satuan">Derajat Celcius (°C)</div>
+        </div>
+        <!-- Bagian Belakang (Penjelasan) -->
+        <div class="card-back">
+          <h3>Sumber Data Suhu</h3>
+          <p>Nilai ini didapat dari pembacaan komponen <b>NTC Thermistor</b> di dalam modul DHT11. Resistansi pada sensor akan menurun jika suhu udara di sekitarnya semakin panas, yang kemudian dikonversi menjadi angka oleh ESP32.</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Kartu Kelembapan -->
+    <div class="card-scene" onclick="this.classList.toggle('is-flipped')">
+      <div class="card-inner">
+        <!-- Bagian Depan -->
+        <div class="card-front">
+          <div class="icon-wrapper"><i class="fa-solid fa-droplet"></i></div>
+          <h2>KELEMBAPAN</h2>
+          <div class="nilai" id="val-lembap">0</div>
+          <div class="satuan">Persen (%)</div>
+        </div>
+        <!-- Bagian Belakang (Penjelasan) -->
+        <div class="card-back">
+          <h3>Sumber Kelembapan</h3>
+          <p>Nilai ini diukur menggunakan <b>Sensor Kapasitif Internal</b> pada DHT11. Ia mendeteksi perubahan nilai kapasitansi listrik yang diakibatkan oleh penumpukan molekul uap air di udara sekitar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Konfigurasi Firebase Anda (Sudah otomatis terisi!)
+    var firebaseConfig = {
+      apiKey: "AIzaSyAX0Q_5lhgNy1_eL4vEuoCWHF09RB7n590",
+      databaseURL: "https://monitoringsuhu-a47ef-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+    var sensorRef = database.ref('DataCuaca');
+    
+    sensorRef.on('value', function(snapshot) {
+      var data = snapshot.val();
+      if(data) {
+        document.getElementById('val-suhu').innerText = data.Suhu;
+        document.getElementById('val-lembap').innerText = data.Kelembapan;
+      }
+    });
+  </script>
+
+</body>
+</html>
