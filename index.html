@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Cuaca IoT</title>
+  <title>Dashboard Cuaca IoT Lengkap</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -21,29 +21,43 @@
       padding: 40px 20px;
     }
 
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 40px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      text-align: center;
-    }
+    h1 { font-size: 2rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; text-align: center; }
 
+    /* Panel Info (Buzzer & Prediksi) */
+    .info-panel {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .info-box {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 15px 25px;
+      border-radius: 15px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+    .info-box h4 { color: #88a2b5; font-size: 0.9rem; margin-bottom: 5px; }
+    .info-box .value { font-size: 1.2rem; font-weight: 700; color: #00f3ff; }
+    .buzzer-menyala { color: #ff4d4d !important; text-shadow: 0 0 10px red; }
+
+    /* Grid Kartu 3D */
     .dashboard-grid {
       display: flex;
-      gap: 30px;
+      gap: 25px;
       justify-content: center;
       flex-wrap: wrap;
+      max-width: 1200px;
     }
 
-    /* Scene untuk efek 3D Flip */
     .card-scene {
-      width: 300px;
+      width: 280px;
       height: 350px;
       perspective: 1000px;
       cursor: pointer;
     }
-
     .card-inner {
       width: 100%;
       height: 100%;
@@ -51,11 +65,7 @@
       transition: transform 0.8s;
       transform-style: preserve-3d;
     }
-
-    /* Class yang ditambah saat dipencet */
-    .card-scene.is-flipped .card-inner {
-      transform: rotateY(180deg);
-    }
+    .card-scene.is-flipped .card-inner { transform: rotateY(180deg); }
 
     .card-front, .card-back {
       position: absolute;
@@ -79,71 +89,153 @@
       transform: rotateY(180deg);
       background: rgba(0, 243, 255, 0.1);
       border-color: rgba(0, 243, 255, 0.3);
-      justify-content: flex-start;
-      padding: 40px 25px;
+      justify-content: center;
+      padding: 20px;
     }
 
-    .icon-wrapper { font-size: 3.5rem; color: #00f3ff; margin-bottom: 15px; }
-    h2 { font-size: 1.2rem; color: #b0c4de; margin-bottom: 15px; letter-spacing: 1px; }
-    .nilai { font-size: 4.5rem; font-weight: 700; line-height: 1; margin-bottom: 15px; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
-    .satuan {
-      font-size: 0.9rem;
-      background: rgba(0,0,0,0.3);
-      padding: 8px 20px;
-      border-radius: 20px;
-      color: #88a2b5;
-    }
+    .icon-wrapper { font-size: 3rem; color: #00f3ff; margin-bottom: 10px; }
+    h2 { font-size: 1.1rem; color: #b0c4de; margin-bottom: 10px; letter-spacing: 1px; }
+    .nilai { font-size: 3.5rem; font-weight: 700; line-height: 1; margin-bottom: 10px; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
+    .satuan { font-size: 0.85rem; background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 20px; color: #88a2b5; }
 
-    /* Styling Teks Penjelasan di Belakang Kartu */
-    .card-back h3 { color: #00f3ff; margin-bottom: 20px; font-size: 1.3rem;}
-    .card-back p { font-size: 0.95rem; line-height: 1.6; color: #d1e8ff; text-align: left;}
-
+    /* Teks Rumus di Belakang */
+    .rumus-box { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; font-family: monospace; font-size: 1.1rem; color: #fff; margin-bottom: 15px; letter-spacing: 1px; }
+    .card-back h3 { color: #00f3ff; font-size: 1.1rem; margin-bottom: 10px; }
+    .card-back p { font-size: 0.85rem; line-height: 1.5; color: #d1e8ff; text-align: left; margin-bottom: 5px;}
+    .keterangan-simbol { text-align: left; font-size: 0.8rem; color: #a1c6ea; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; width: 100%;}
   </style>
 </head>
 <body>
 
-  <h1>Sistem Pemantau Cuaca IoT</h1>
+  <h1>Pemantau Cuaca IoT</h1>
+
+  <!-- Panel Status Atas -->
+  <div class="info-panel">
+    <div class="info-box">
+      <h4>STATUS BUZZER (ALARM)</h4>
+      <div class="value" id="val-buzzer">MEMUAT...</div>
+    </div>
+    <div class="info-box">
+      <h4>PREDIKSI CUACA (2 JAM)</h4>
+      <div class="value" id="val-prediksi">MENGHITUNG DATA...</div>
+    </div>
+  </div>
   
   <div class="dashboard-grid">
-    <!-- Kartu Suhu -->
+    
+    <!-- 1. Celcius -->
     <div class="card-scene" onclick="this.classList.toggle('is-flipped')">
       <div class="card-inner">
-        <!-- Bagian Depan -->
         <div class="card-front">
           <div class="icon-wrapper"><i class="fa-solid fa-temperature-half"></i></div>
-          <h2>SUHU RUANGAN</h2>
-          <div class="nilai" id="val-suhu">0</div>
-          <div class="satuan">Derajat Celcius (°C)</div>
+          <h2>SUHU CELCIUS</h2>
+          <div class="nilai" id="val-celcius">0</div>
+          <div class="satuan">Celcius (°C)</div>
         </div>
-        <!-- Bagian Belakang (Penjelasan) -->
         <div class="card-back">
-          <h3>Sumber Data Suhu</h3>
-          <p>Nilai ini didapat dari pembacaan komponen <b>NTC Thermistor</b> di dalam modul DHT11. Resistansi pada sensor akan menurun jika suhu udara di sekitarnya semakin panas, yang kemudian dikonversi menjadi angka oleh ESP32.</p>
+          <h3>Termistor NTC (Sensor)</h3>
+          <div class="rumus-box">1/T = 1/T₀ + 1/B * ln(R/R₀)</div>
+          <div class="keterangan-simbol">
+            <b>T</b> = Suhu Kelvin (Dikonversi ke °C)<br>
+            <b>T₀</b> = Suhu Ruangan Referensi<br>
+            <b>B</b> = Konstanta Material NTC<br>
+            <b>R</b> = Resistansi Sensor Saat Ini<br>
+            <b>R₀</b> = Resistansi Referensi
+          </div>
         </div>
       </div>
     </div>
-    
-    <!-- Kartu Kelembapan -->
+
+    <!-- 2. Fahrenheit -->
     <div class="card-scene" onclick="this.classList.toggle('is-flipped')">
       <div class="card-inner">
-        <!-- Bagian Depan -->
+        <div class="card-front">
+          <div class="icon-wrapper"><i class="fa-solid fa-temperature-full"></i></div>
+          <h2>SUHU FAHRENHEIT</h2>
+          <div class="nilai" id="val-fahrenheit">0</div>
+          <div class="satuan">Fahrenheit (°F)</div>
+        </div>
+        <div class="card-back">
+          <h3>Konversi Celcius ke Fahrenheit</h3>
+          <div class="rumus-box">F = (C * 1.8) + 32</div>
+          <div class="keterangan-simbol">
+            <b>F</b> = Nilai Suhu Fahrenheit<br>
+            <b>C</b> = Nilai Suhu Celcius<br>
+            <b>1.8</b> = Rasio skala (9/5)<br>
+            <b>32</b> = Titik beku air pada Fahrenheit
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Reamur -->
+    <div class="card-scene" onclick="this.classList.toggle('is-flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="icon-wrapper"><i class="fa-solid fa-temperature-empty"></i></div>
+          <h2>SUHU REAMUR</h2>
+          <div class="nilai" id="val-reamur">0</div>
+          <div class="satuan">Reamur (°R)</div>
+        </div>
+        <div class="card-back">
+          <h3>Konversi Celcius ke Reamur</h3>
+          <div class="rumus-box">R = C * 0.8</div>
+          <div class="keterangan-simbol">
+            <b>R</b> = Nilai Suhu Reamur<br>
+            <b>C</b> = Nilai Suhu Celcius<br>
+            <b>0.8</b> = Rasio skala (4/5)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Kelvin -->
+    <div class="card-scene" onclick="this.classList.toggle('is-flipped')">
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="icon-wrapper"><i class="fa-solid fa-temperature-arrow-up"></i></div>
+          <h2>SUHU KELVIN</h2>
+          <div class="nilai" id="val-kelvin">0</div>
+          <div class="satuan">Kelvin (K)</div>
+        </div>
+        <div class="card-back">
+          <h3>Konversi Celcius ke Kelvin</h3>
+          <div class="rumus-box">K = C + 273.15</div>
+          <div class="keterangan-simbol">
+            <b>K</b> = Nilai Suhu Kelvin (Suhu Mutlak)<br>
+            <b>C</b> = Nilai Suhu Celcius<br>
+            <b>273.15</b> = Titik nol mutlak pada skala Celcius
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Kelembapan -->
+    <div class="card-scene" onclick="this.classList.toggle('is-flipped')">
+      <div class="card-inner">
         <div class="card-front">
           <div class="icon-wrapper"><i class="fa-solid fa-droplet"></i></div>
           <h2>KELEMBAPAN</h2>
           <div class="nilai" id="val-lembap">0</div>
-          <div class="satuan">Persen (%)</div>
+          <div class="satuan">Persentase (%)</div>
         </div>
-        <!-- Bagian Belakang (Penjelasan) -->
         <div class="card-back">
-          <h3>Sumber Kelembapan</h3>
-          <p>Nilai ini diukur menggunakan <b>Sensor Kapasitif Internal</b> pada DHT11. Ia mendeteksi perubahan nilai kapasitansi listrik yang diakibatkan oleh penumpukan molekul uap air di udara sekitar.</p>
+          <h3>Sensor Kapasitif Internal</h3>
+          <div class="rumus-box">C = C₀ * (1 + α(RH - RH₀))</div>
+          <div class="keterangan-simbol">
+            <b>C</b> = Kapasitansi yang diukur<br>
+            <b>C₀</b> = Kapasitansi Referensi<br>
+            <b>α</b> = Koefisien Sensitivitas Uap Air<br>
+            <b>RH</b> = Relative Humidity (%) saat ini<br>
+            <b>RH₀</b> = Kelembapan Referensi
+          </div>
         </div>
       </div>
     </div>
+
   </div>
 
   <script>
-    // Konfigurasi Firebase Anda (Sudah otomatis terisi!)
     var firebaseConfig = {
       apiKey: "AIzaSyAX0Q_5lhgNy1_eL4vEuoCWHF09RB7n590",
       databaseURL: "https://monitoringsuhu-a47ef-default-rtdb.asia-southeast1.firebasedatabase.app"
@@ -156,8 +248,62 @@
     sensorRef.on('value', function(snapshot) {
       var data = snapshot.val();
       if(data) {
-        document.getElementById('val-suhu').innerText = data.Suhu;
-        document.getElementById('val-lembap').innerText = data.Kelembapan;
+        let suhuC = data.Suhu;
+        let kelembapan = data.Kelembapan;
+        let buzzer = data.StatusBuzzer;
+
+        // 1. Hitung Rumus Suhu
+        let suhuF = (suhuC * 1.8) + 32;
+        let suhuR = (suhuC * 0.8);
+        let suhuK = suhuC + 273.15;
+
+        // 2. Tampilkan ke Layar (Dibulatkan 1 angka di belakang koma)
+        document.getElementById('val-celcius').innerText = suhuC.toFixed(1);
+        document.getElementById('val-fahrenheit').innerText = suhuF.toFixed(1);
+        document.getElementById('val-reamur').innerText = suhuR.toFixed(1);
+        document.getElementById('val-kelvin').innerText = suhuK.toFixed(1);
+        document.getElementById('val-lembap').innerText = kelembapan.toFixed(1);
+
+        // 3. Tampilkan Status Buzzer (dengan efek warna merah jika menyala)
+        let buzzerEl = document.getElementById('val-buzzer');
+        buzzerEl.innerText = buzzer;
+        if (buzzer === "MENYALA") {
+            buzzerEl.classList.add('buzzer-menyala');
+        } else {
+            buzzerEl.classList.remove('buzzer-menyala');
+        }
+
+        // 4. Logika Prediksi Cuaca (Perbandingan 2 Jam)
+        let waktuSekarang = new Date().getTime();
+        let durasi2Jam = 2 * 60 * 60 * 1000; // 2 Jam dalam milidetik
+
+        // Mengambil memori data suhu dari browser
+        let waktuLalu = localStorage.getItem('waktuSimpan');
+        let suhuLalu = localStorage.getItem('suhuLalu');
+
+        // Jika belum ada data atau sudah lewat 2 jam, simpan suhu sekarang sebagai patokan baru
+        if (!waktuLalu || (waktuSekarang - waktuLalu) >= durasi2Jam) {
+            localStorage.setItem('waktuSimpan', waktuSekarang);
+            localStorage.setItem('suhuLalu', suhuC);
+            document.getElementById('val-prediksi').innerText = "MEREKAM DATA AWAL...";
+        } else {
+            // Membandingkan data sekarang dengan data 2 jam lalu
+            let selisih = suhuC - parseFloat(suhuLalu);
+            let teksPrediksi = "CUACA STABIL";
+
+            if (selisih > 1.5) {
+                teksPrediksi = "SUHU NAIK (POTENSI PANAS/CERAH)";
+            } else if (selisih < -1.5) {
+                teksPrediksi = "SUHU TURUN (POTENSI HUJAN/MENDUNG)";
+            }
+
+            // Memasukkan kelembapan sebagai faktor tambahan prediksi
+            if (kelembapan > 85 && selisih < 0) {
+                 teksPrediksi = "SANGAT LEMBAP (POTENSI HUJAN DERAS)";
+            }
+
+            document.getElementById('val-prediksi').innerText = teksPrediksi;
+        }
       }
     });
   </script>
