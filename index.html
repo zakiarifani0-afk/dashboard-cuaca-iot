@@ -335,7 +335,7 @@
 
     <script>
         // ==============================================
-        // 1. KONFIGURASI FIREBASE (SUDAH DISESUAIKAN DENGAN ESP32)
+        // 1. KONFIGURASI FIREBASE
         // ==============================================
         const firebaseConfig = {
             apiKey: "AIzaSyAX0Q_5lhgNy1_eL4vEuoCWHF09RB7n590",
@@ -387,7 +387,7 @@
                 // RESET WATCHDOG
                 clearTimeout(connectionWatchdog);
 
-                // Watchdog 6 Detik
+                // Watchdog diubah menjadi 60 Detik (60000 ms) agar web stabil tidak kedap-kedip
                 connectionWatchdog = setTimeout(() => {
                     statusBadge.innerText = "○ SYSTEM OFF (OFFLINE)";
                     statusBadge.style.backgroundColor = "#d50000"; 
@@ -398,7 +398,7 @@
                     document.getElementById('val-r').innerText = "0.0";
                     document.getElementById('val-k').innerText = "0.00";
                     document.getElementById('val-hum').innerText = "0.0";
-                }, 6000); 
+                }, 60000); 
             }
         });
 
