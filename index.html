@@ -335,16 +335,16 @@
 
     <script>
         // ==============================================
-        // 1. KONFIGURASI FIREBASE (SUDAH DIISI OTOMATIS)
+        // 1. KONFIGURASI FIREBASE (SUDAH DISESUAIKAN DENGAN ESP32)
         // ==============================================
         const firebaseConfig = {
-            apiKey: "AIzaSyBsq499kdB8qPiTIx8l1-VaG3TD7JXVfZU",
-            databaseURL: "https://sistemairiot-default-rtdb.asia-southeast1.firebasedatabase.app"
+            apiKey: "AIzaSyAX0Q_5lhgNy1_eL4vEuoCWHF09RB7n590",
+            databaseURL: "https://monitoringsuhu-a47ef-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
-        // Target ke node DataSuhu (Sesuai kodingan ESP32 Suhu)
+        // Target ke node DataSuhu 
         const monitoringRef = db.ref('DataSuhu');
         
         // ==============================================
@@ -353,10 +353,7 @@
         let connectionWatchdog;
         const statusBadge = document.getElementById('status-badge');
         
-        // Ambil riwayat dari LocalStorage browser
         let weatherHistory = JSON.parse(localStorage.getItem('cuacaHistory')) || [];
-        
-        // Interval diset 1 Menit untuk presentasi (ubah jadi 7200000 untuk 2 jam sungguhan)
         const INTERVAL_LOG_MS = 60000; 
         let lastLogTime = Date.now();
 
